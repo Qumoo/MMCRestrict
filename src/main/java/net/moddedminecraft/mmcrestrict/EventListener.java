@@ -285,7 +285,8 @@ public class EventListener {
         if (!event.getPreview().getFinal().isEmpty()) {
             ItemStack itemStack = event.getPreview().getFinal().createStack();
             if (checkBanned(itemStack, "craft", player)) {
-                event.setCancelled(true);
+                event.getPreview().setCustom(ItemStack.of(ItemTypes.AIR));
+                //event.setCancelled(true);
             }
         }
     }
