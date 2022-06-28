@@ -278,7 +278,7 @@ public class EventListener {
     }
 
     @Listener
-    public void onCraftItemEvent(CraftItemEvent.Preview event, @Root Player player) {
+    public void onCraftItemPreviewEvent(CraftItemEvent.Preview event, @Root Player player) {
         if (player.hasPermission(Permissions.ITEM_BYPASS)) {
             return;
         }
@@ -289,6 +289,15 @@ public class EventListener {
                 //event.setCancelled(true);
             }
         }
+    }
+
+    @Listener
+    public void onCraftItemEvent(CraftItemEvent.Craft event, @Root Player player) {
+        if (player.hasPermission(Permissions.ITEM_BYPASS)) {
+            return;
+        }
+        if (checkBanned(event.getCrafted().createStack(), "craft", player))
+            event.setCancelled(true);
     }
 
     @Listener
@@ -335,22 +344,13 @@ public class EventListener {
                 ItemStack itemStack = transaction.getFinal().createStack();
                 if (checkBanned(itemStack, "own", player)) {
                     event.setCancelled(true);
-                    Sponge.getScheduler().createTaskBuilder().execute(new Runnable() {
-                        public void run() {
-                            checkInventory(player);
-                        }
-                    }).delay(1, TimeUnit.SECONDS).name("mmcrestrict-s-onclickinventoryevent").submit(this.plugin);
+                    Sponge.getScheduler().createTaskBuilder().execute(() -> checkInventory(player)).delay(1, TimeUnit.SECONDS).name("mmcrestrict-s-onclickinventoryevent").submit(this.plugin);
                 }
             }
         } else {
-            ItemStack itemStack = event.getCursorTransaction().getFinal().createStack();
-            if (checkBanned(itemStack, "own", player)) {
+            if (event.getTransactions().stream().anyMatch(transaction -> checkBanned(transaction.getFinal().createStack(), "own", player))) {
                 event.setCancelled(true);
-                Sponge.getScheduler().createTaskBuilder().execute(new Runnable() {
-                    public void run() {
-                        checkInventory(player);
-                    }
-                }).delay(1, TimeUnit.SECONDS).name("mmcrestrict-s-onclickinventoryevent").submit(this.plugin);
+                Sponge.getScheduler().createTaskBuilder().execute(() -> checkInventory(player)).delay(1, TimeUnit.SECONDS).name("mmcrestrict-s-onclickinventoryevent").submit(this.plugin);
             }
         }
     }
